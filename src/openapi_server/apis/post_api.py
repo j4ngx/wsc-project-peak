@@ -54,8 +54,8 @@ async def posts_get(
     title: str = Query(None, description="Search posts by title", alias="title"),
     author: str = Query(None, description="Search posts by author", alias="author"),
     visibility: str = Query(None, description="Filter posts by visibility status (draft, review, public)", alias="visibility"),
-    limit: int = Query(None, description="Limit the number of posts returned", alias="limit"),
-    offset: int = Query(None, description="The number of posts to skip before starting to collect the result set", alias="offset"),
+    limit: int = Query(10, description="Limit the number of posts returned", alias="limit"),
+    offset: int = Query(0, description="The number of posts to skip before starting to collect the result set", alias="offset"),
 ) -> PostListPaginated:
     """Retrieve a list of posts or search posts by title, author, or visibility"""
     if not BasePostApi.subclasses:

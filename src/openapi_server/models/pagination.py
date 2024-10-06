@@ -31,8 +31,8 @@ class Pagination(BaseModel):
     """
     Pagination
     """ # noqa: E501
-    limit: Optional[StrictInt] = Field(default=None, description="The number of posts per page")
-    offset: Optional[StrictInt] = Field(default=None, description="The number of posts to skip before starting to collect the result set")
+    limit: Optional[StrictInt] = Field(default=10, description="The number of posts per page")
+    offset: Optional[StrictInt] = Field(default=0, description="The number of posts to skip before starting to collect the result set")
     total: Optional[StrictInt] = Field(default=None, description="Total number of posts available")
     __properties: ClassVar[List[str]] = ["limit", "offset", "total"]
 
@@ -85,8 +85,8 @@ class Pagination(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "limit": obj.get("limit"),
-            "offset": obj.get("offset"),
+            "limit": obj.get("limit") if obj.get("limit") is not None else 10,
+            "offset": obj.get("offset") if obj.get("offset") is not None else 0,
             "total": obj.get("total")
         })
         return _obj

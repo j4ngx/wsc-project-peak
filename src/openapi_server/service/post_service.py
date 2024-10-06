@@ -18,14 +18,14 @@ class PostService:
     
     def search_post(
         self,
-        offset: int,
-        limit: int,
+        offset: int = 0,
+        limit: int = 10,
         title: str = None,
-        content: str = None,
         author: str = None,
         visibility: str = None,
     ):
-        posts, total_posts = self.post_repo.search_post(offset=offset, limit=limit, title=title, content=content, author=author)
+        print(offset, limit, title, author, visibility)
+        posts, total_posts = self.post_repo.search_post(offset=offset, limit=limit, title=title, author=author, visibility=visibility)
         
         return PostListPaginated(
             pagination=Pagination(offset=offset, limit=limit, total=total_posts),
