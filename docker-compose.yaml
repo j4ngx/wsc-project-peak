@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  service:
+    build:
+      context: .
+      target: service
+    ports:
+      - "8080:8080"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+    volumes:
+      - .:/usr/src/app  # Monta el código fuente en el contenedor
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: peak-db
+    volumes:
+      - mongo_data:/data/db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mongo_data:

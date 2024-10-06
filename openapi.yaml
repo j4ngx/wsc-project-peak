@@ -1,0 +1,1472 @@
+openapi: 3.0.0
+info:
+  description: API for managing posts and categories on a website
+  title: Project Peak API
+  version: 1.1.0
+servers:
+- description: Production server
+  url: https://api.example.com/api/v1
+- description: Development server
+  url: http://localhost:8000/api/v1
+tags:
+- description: Operations related to posts
+  name: Post
+- description: Operations related to categories
+  name: Category
+paths:
+  /posts:
+    get:
+      description: "Retrieve a list of posts or search posts by title, author, or\
+        \ visibility"
+      parameters:
+      - description: Search posts by title
+        explode: true
+        in: query
+        name: title
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Search posts by author
+        explode: true
+        in: query
+        name: author
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: "Filter posts by visibility status (draft, review, public)"
+        explode: true
+        in: query
+        name: visibility
+        required: false
+        schema:
+          enum:
+          - draft
+          - review
+          - public
+          type: string
+        style: form
+      - description: Limit the number of posts returned
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: The number of posts to skip before starting to collect the result
+          set
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                postsList:
+                  summary: List of posts retrieved successfully
+                  value:
+                    pagination:
+                      limit: 10
+                      offset: 0
+                      total: 100
+                    data:
+                    - id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+                      title: How to do Squats
+                      content: "# Squats \nSquats are a fundamental exercise to build\
+                        \ strength in your legs and glutes..."
+                      author: Jane Doe
+                      createdAt: 2024-10-06T12:00:00.000Z
+                      updatedAt: 2024-10-06T12:05:00.000Z
+                      images:
+                      - url: https://example.com/images/squat.jpg
+                        altText: Person doing a squat
+                      categories:
+                      - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                        name: Fitness
+                      visibility: public
+              schema:
+                $ref: '#/components/schemas/PostListPaginated'
+          description: List of posts retrieved successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Get all posts or search for posts
+      tags:
+      - Post
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              examples:
+                postCreated:
+                  summary: Post created successfully
+                  value:
+                    id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+                    title: How to do Squats
+                    content: "# Squats \nSquats are a fundamental exercise to build\
+                      \ strength in your legs and glutes..."
+                    author: Jane Doe
+                    createdAt: 2024-10-06T12:00:00.000Z
+                    updatedAt: 2024-10-06T12:00:00.000Z
+                    images:
+                    - url: https://example.com/images/squat.jpg
+                      altText: Person doing a squat
+                    categories:
+                    - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                      name: Fitness
+                    visibility: draft
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+          description: Post created successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Create a new post
+      tags:
+      - Post
+  /posts/{postId}:
+    delete:
+      parameters:
+      - explode: false
+        in: path
+        name: postId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Post deleted
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "404":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Not found error example
+                  value:
+                    statusCode: 404
+                    message: The requested resource was not found
+                    error: Not Found
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found. The server can not find the requested resource.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Delete a post
+      tags:
+      - Post
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: postId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                postCreated:
+                  summary: Post created successfully
+                  value:
+                    id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+                    title: How to do Squats
+                    content: "# Squats \nSquats are a fundamental exercise to build\
+                      \ strength in your legs and glutes..."
+                    author: Jane Doe
+                    createdAt: 2024-10-06T12:00:00.000Z
+                    updatedAt: 2024-10-06T12:00:00.000Z
+                    images:
+                    - url: https://example.com/images/squat.jpg
+                      altText: Person doing a squat
+                    categories:
+                    - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                      name: Fitness
+                    visibility: draft
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+          description: Post created successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "404":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Not found error example
+                  value:
+                    statusCode: 404
+                    message: The requested resource was not found
+                    error: Not Found
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found. The server can not find the requested resource.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Get a single post
+      tags:
+      - Post
+    patch:
+      parameters:
+      - explode: false
+        in: path
+        name: postId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostPatch'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                postCreated:
+                  summary: Post created successfully
+                  value:
+                    id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+                    title: How to do Squats
+                    content: "# Squats \nSquats are a fundamental exercise to build\
+                      \ strength in your legs and glutes..."
+                    author: Jane Doe
+                    createdAt: 2024-10-06T12:00:00.000Z
+                    updatedAt: 2024-10-06T12:00:00.000Z
+                    images:
+                    - url: https://example.com/images/squat.jpg
+                      altText: Person doing a squat
+                    categories:
+                    - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                      name: Fitness
+                    visibility: draft
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+          description: Post created successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "404":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Not found error example
+                  value:
+                    statusCode: 404
+                    message: The requested resource was not found
+                    error: Not Found
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found. The server can not find the requested resource.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Partially update a post
+      tags:
+      - Post
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: postId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                postCreated:
+                  summary: Post created successfully
+                  value:
+                    id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+                    title: How to do Squats
+                    content: "# Squats \nSquats are a fundamental exercise to build\
+                      \ strength in your legs and glutes..."
+                    author: Jane Doe
+                    createdAt: 2024-10-06T12:00:00.000Z
+                    updatedAt: 2024-10-06T12:00:00.000Z
+                    images:
+                    - url: https://example.com/images/squat.jpg
+                      altText: Person doing a squat
+                    categories:
+                    - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                      name: Fitness
+                    visibility: draft
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+          description: Post created successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "404":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Not found error example
+                  value:
+                    statusCode: 404
+                    message: The requested resource was not found
+                    error: Not Found
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found. The server can not find the requested resource.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Update a post
+      tags:
+      - Post
+  /categories:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                categoriesList:
+                  summary: List of categories retrieved successfully
+                  value:
+                  - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                    name: Fitness
+                    description: Posts related to fitness and exercise routines.
+                  - id: 9a4f8d6c-03c5-4f4f-b291-6a1b8bcb7f3e
+                    name: Nutrition
+                    description: Posts related to healthy eating and nutrition.
+              schema:
+                items:
+                  $ref: '#/components/schemas/Category'
+                type: array
+          description: List of categories retrieved successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Get all categories
+      tags:
+      - Category
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              examples:
+                categoryCreated:
+                  summary: Category created successfully
+                  value:
+                    id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                    name: Fitness
+                    description: Posts related to fitness and exercise routines.
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: Category created successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Create a new category
+      tags:
+      - Category
+  /categories/{categoryId}:
+    delete:
+      parameters:
+      - explode: false
+        in: path
+        name: categoryId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Category deleted
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "404":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Not found error example
+                  value:
+                    statusCode: 404
+                    message: The requested resource was not found
+                    error: Not Found
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found. The server can not find the requested resource.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Delete a category
+      tags:
+      - Category
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: categoryId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                categoryRetrieved:
+                  summary: Category retrieved successfully
+                  value:
+                    id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                    name: Fitness
+                    description: Posts related to fitness and exercise routines.
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: Category retrieved successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "404":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Not found error example
+                  value:
+                    statusCode: 404
+                    message: The requested resource was not found
+                    error: Not Found
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found. The server can not find the requested resource.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Get a single category
+      tags:
+      - Category
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: categoryId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                categoryUpdated:
+                  summary: Category updated successfully
+                  value:
+                    id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                    name: Fitness
+                    description: Posts related to fitness and exercise routines.
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: Category updated successfully
+        "401":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Unauthorized error example
+                  value:
+                    statusCode: 401
+                    message: Authentication required to access this resource
+                    error: Unauthorized
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized. The client must authenticate itself to get the
+            requested response.
+        "403":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Forbidden error example
+                  value:
+                    statusCode: 403
+                    message: You don't have permission to access this resource
+                    error: Forbidden
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden. The client does not have access rights to the content.
+        "404":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Not found error example
+                  value:
+                    statusCode: 404
+                    message: The requested resource was not found
+                    error: Not Found
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found. The server can not find the requested resource.
+        "500":
+          content:
+            application/json:
+              examples:
+                example:
+                  summary: Internal server error example
+                  value:
+                    statusCode: 500
+                    message: An unexpected error occurred on the server
+                    error: Internal Server Error
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error. The server has encountered a situation
+            it doesn't know how to handle.
+      summary: Update a category
+      tags:
+      - Category
+components:
+  responses:
+    UnauthorizedError:
+      content:
+        application/json:
+          examples:
+            example:
+              summary: Unauthorized error example
+              value:
+                statusCode: 401
+                message: Authentication required to access this resource
+                error: Unauthorized
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      description: Unauthorized. The client must authenticate itself to get the requested
+        response.
+    ForbiddenError:
+      content:
+        application/json:
+          examples:
+            example:
+              summary: Forbidden error example
+              value:
+                statusCode: 403
+                message: You don't have permission to access this resource
+                error: Forbidden
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      description: Forbidden. The client does not have access rights to the content.
+    NotFoundError:
+      content:
+        application/json:
+          examples:
+            example:
+              summary: Not found error example
+              value:
+                statusCode: 404
+                message: The requested resource was not found
+                error: Not Found
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      description: Not Found. The server can not find the requested resource.
+    InternalServerError:
+      content:
+        application/json:
+          examples:
+            example:
+              summary: Internal server error example
+              value:
+                statusCode: 500
+                message: An unexpected error occurred on the server
+                error: Internal Server Error
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      description: Internal Server Error. The server has encountered a situation it
+        doesn't know how to handle.
+    PostSuccess:
+      content:
+        application/json:
+          examples:
+            postCreated:
+              summary: Post created successfully
+              value:
+                id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+                title: How to do Squats
+                content: "# Squats \nSquats are a fundamental exercise to build strength\
+                  \ in your legs and glutes..."
+                author: Jane Doe
+                createdAt: 2024-10-06T12:00:00.000Z
+                updatedAt: 2024-10-06T12:00:00.000Z
+                images:
+                - url: https://example.com/images/squat.jpg
+                  altText: Person doing a squat
+                categories:
+                - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                  name: Fitness
+                visibility: draft
+          schema:
+            $ref: '#/components/schemas/PostResponse'
+      description: Post created successfully
+    ListPostsSuccess:
+      content:
+        application/json:
+          examples:
+            postsList:
+              summary: List of posts retrieved successfully
+              value:
+                pagination:
+                  limit: 10
+                  offset: 0
+                  total: 100
+                data:
+                - id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+                  title: How to do Squats
+                  content: "# Squats \nSquats are a fundamental exercise to build\
+                    \ strength in your legs and glutes..."
+                  author: Jane Doe
+                  createdAt: 2024-10-06T12:00:00.000Z
+                  updatedAt: 2024-10-06T12:05:00.000Z
+                  images:
+                  - url: https://example.com/images/squat.jpg
+                    altText: Person doing a squat
+                  categories:
+                  - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                    name: Fitness
+                  visibility: public
+          schema:
+            $ref: '#/components/schemas/PostListPaginated'
+      description: List of posts retrieved successfully
+    ListCategoriesSuccess:
+      content:
+        application/json:
+          examples:
+            categoriesList:
+              summary: List of categories retrieved successfully
+              value:
+              - id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                name: Fitness
+                description: Posts related to fitness and exercise routines.
+              - id: 9a4f8d6c-03c5-4f4f-b291-6a1b8bcb7f3e
+                name: Nutrition
+                description: Posts related to healthy eating and nutrition.
+          schema:
+            items:
+              $ref: '#/components/schemas/Category'
+            type: array
+      description: List of categories retrieved successfully
+    CategoryCreatedSuccess:
+      content:
+        application/json:
+          examples:
+            categoryCreated:
+              summary: Category created successfully
+              value:
+                id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                name: Fitness
+                description: Posts related to fitness and exercise routines.
+          schema:
+            $ref: '#/components/schemas/Category'
+      description: Category created successfully
+    CategoryUpdatedSuccess:
+      content:
+        application/json:
+          examples:
+            categoryUpdated:
+              summary: Category updated successfully
+              value:
+                id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                name: Fitness
+                description: Posts related to fitness and exercise routines.
+          schema:
+            $ref: '#/components/schemas/Category'
+      description: Category updated successfully
+    CategoryRetrievedSuccess:
+      content:
+        application/json:
+          examples:
+            categoryRetrieved:
+              summary: Category retrieved successfully
+              value:
+                id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+                name: Fitness
+                description: Posts related to fitness and exercise routines.
+          schema:
+            $ref: '#/components/schemas/Category'
+      description: Category retrieved successfully
+  schemas:
+    Post:
+      example:
+        createdAt: 2024-10-06T12:00:00Z
+        images:
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        visibility: draft
+        author: Jane Doe
+        id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+        categories:
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        title: How to do Squats
+        content: |
+          "# Squats \n
+          Squats are a fundamental exercise to build strength in your legs and glutes..."
+        updatedAt: 2024-10-06T12:05:00Z
+      properties:
+        id:
+          description: Unique identifier for the post
+          example: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+          title: id
+          type: string
+        title:
+          description: Title of the post
+          example: How to do Squats
+          title: title
+          type: string
+        content:
+          description: Content of the post in Markdown format
+          example: |
+            "# Squats \n
+            Squats are a fundamental exercise to build strength in your legs and glutes..."
+          title: content
+          type: string
+        author:
+          description: Author of the post
+          example: Jane Doe
+          title: author
+          type: string
+        createdAt:
+          description: Timestamp when the post was created
+          example: 2024-10-06T12:00:00Z
+          format: date-time
+          title: createdAt
+          type: string
+        updatedAt:
+          description: Timestamp when the post was last updated
+          example: 2024-10-06T12:05:00Z
+          format: date-time
+          title: updatedAt
+          type: string
+        images:
+          description: List of images associated with the post
+          items:
+            $ref: '#/components/schemas/Post_images_inner'
+          title: images
+          type: array
+        categories:
+          description: List of categories associated with the post
+          items:
+            $ref: '#/components/schemas/Category'
+          title: categories
+          type: array
+        visibility:
+          default: draft
+          description: "Visibility state of the post: draft, review, or public"
+          enum:
+          - draft
+          - review
+          - public
+          example: draft
+          title: visibility
+          type: string
+      title: Post
+      type: object
+    PostCreate:
+      allOf:
+      - $ref: '#/components/schemas/Post'
+      example:
+        createdAt: 2024-10-06T12:00:00Z
+        images:
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        visibility: draft
+        author: Jane Doe
+        id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+        categories:
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        title: How to do Squats
+        content: |
+          "# Squats \n
+          Squats are a fundamental exercise to build strength in your legs and glutes..."
+        updatedAt: 2024-10-06T12:05:00Z
+      required:
+      - author
+      - content
+      - title
+      - visibility
+      title: PostCreate
+    PostUpdate:
+      allOf:
+      - $ref: '#/components/schemas/Post'
+      example:
+        createdAt: 2024-10-06T12:00:00Z
+        images:
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        visibility: draft
+        author: Jane Doe
+        id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+        categories:
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        title: How to do Squats
+        content: |
+          "# Squats \n
+          Squats are a fundamental exercise to build strength in your legs and glutes..."
+        updatedAt: 2024-10-06T12:05:00Z
+      required:
+      - author
+      - content
+      - title
+      - visibility
+      title: PostUpdate
+    PostPatch:
+      allOf:
+      - $ref: '#/components/schemas/Post'
+      example:
+        createdAt: 2024-10-06T12:00:00Z
+        images:
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        visibility: draft
+        author: Jane Doe
+        id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+        categories:
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        title: How to do Squats
+        content: |
+          "# Squats \n
+          Squats are a fundamental exercise to build strength in your legs and glutes..."
+        updatedAt: 2024-10-06T12:05:00Z
+      title: PostPatch
+    PostResponse:
+      allOf:
+      - $ref: '#/components/schemas/Post'
+      example:
+        createdAt: 2024-10-06T12:00:00Z
+        images:
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        - altText: Person doing a squat
+          url: https://example.com/images/squat.jpg
+        visibility: draft
+        author: Jane Doe
+        id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+        categories:
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        - name: Fitness
+          description: Posts related to fitness and exercise routines.
+          id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+        title: How to do Squats
+        content: |
+          "# Squats \n
+          Squats are a fundamental exercise to build strength in your legs and glutes..."
+        updatedAt: 2024-10-06T12:05:00Z
+      required:
+      - author
+      - content
+      - createdAt
+      - id
+      - title
+      - updatedAt
+      - visibility
+      title: PostResponse
+    PostListPaginated:
+      additionalProperties: false
+      example:
+        pagination:
+          total: 1
+          offset: 6
+          limit: 0
+        data:
+        - createdAt: 2024-10-06T12:00:00Z
+          images:
+          - altText: Person doing a squat
+            url: https://example.com/images/squat.jpg
+          - altText: Person doing a squat
+            url: https://example.com/images/squat.jpg
+          visibility: draft
+          author: Jane Doe
+          id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+          categories:
+          - name: Fitness
+            description: Posts related to fitness and exercise routines.
+            id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+          - name: Fitness
+            description: Posts related to fitness and exercise routines.
+            id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+          title: How to do Squats
+          content: |
+            "# Squats \n
+            Squats are a fundamental exercise to build strength in your legs and glutes..."
+          updatedAt: 2024-10-06T12:05:00Z
+        - createdAt: 2024-10-06T12:00:00Z
+          images:
+          - altText: Person doing a squat
+            url: https://example.com/images/squat.jpg
+          - altText: Person doing a squat
+            url: https://example.com/images/squat.jpg
+          visibility: draft
+          author: Jane Doe
+          id: 9bdb5b16-4d3f-43cb-8f71-839b1e56b2d4
+          categories:
+          - name: Fitness
+            description: Posts related to fitness and exercise routines.
+            id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+          - name: Fitness
+            description: Posts related to fitness and exercise routines.
+            id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+          title: How to do Squats
+          content: |
+            "# Squats \n
+            Squats are a fundamental exercise to build strength in your legs and glutes..."
+          updatedAt: 2024-10-06T12:05:00Z
+      properties:
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          items:
+            $ref: '#/components/schemas/Post'
+          title: data
+          type: array
+      title: PostListPaginated
+      type: object
+    Pagination:
+      additionalProperties: false
+      example:
+        total: 1
+        offset: 6
+        limit: 0
+      properties:
+        limit:
+          description: The number of posts per page
+          title: limit
+          type: integer
+        offset:
+          description: The number of posts to skip before starting to collect the
+            result set
+          title: offset
+          type: integer
+        total:
+          description: Total number of posts available
+          title: total
+          type: integer
+      title: Pagination
+      type: object
+    Category:
+      example:
+        name: Fitness
+        description: Posts related to fitness and exercise routines.
+        id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+      properties:
+        id:
+          description: Unique identifier for the category
+          example: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+          title: id
+          type: string
+        name:
+          description: Name of the category
+          example: Fitness
+          title: name
+          type: string
+        description:
+          description: A brief description of the category
+          example: Posts related to fitness and exercise routines.
+          title: description
+          type: string
+      title: Category
+      type: object
+    CategoryCreate:
+      allOf:
+      - $ref: '#/components/schemas/Category'
+      example:
+        name: Fitness
+        description: Posts related to fitness and exercise routines.
+        id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+      required:
+      - description
+      - name
+      title: CategoryCreate
+    CategoryUpdate:
+      allOf:
+      - $ref: '#/components/schemas/Category'
+      example:
+        name: Fitness
+        description: Posts related to fitness and exercise routines.
+        id: c1bfb8a0-3b84-4f43-949e-3a7f4f2a1e21
+      required:
+      - description
+      - name
+      title: CategoryUpdate
+    ErrorResponse:
+      example:
+        message: message
+        error: error
+        statusCode: 5
+      properties:
+        statusCode:
+          description: HTTP status code
+          title: statusCode
+          type: integer
+        message:
+          description: Error message
+          title: message
+          type: string
+        error:
+          description: Error type
+          title: error
+          type: string
+      title: ErrorResponse
+      type: object
+    Post_images_inner:
+      example:
+        altText: Person doing a squat
+        url: https://example.com/images/squat.jpg
+      properties:
+        url:
+          description: URL of the image
+          example: https://example.com/images/squat.jpg
+          title: url
+          type: string
+        altText:
+          description: Alternative text for the image
+          example: Person doing a squat
+          title: altText
+          type: string
+      title: Post_images_inner
+      type: object
